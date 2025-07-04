@@ -1,0 +1,10 @@
+[build-system]
+requires = [
+    "setuptools>=65.0",
+    "wheel",
+    "numpy<2.0",
+    "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp312-cp312-linux_x86_64.whl#sha256=badc14d413ff1847d15021a1ec0affa479d24dfc83e6d51b9b4b9fbfaad1b14c",
+]
+build-backend = "setuptools.build_meta"
+
+

@@ -1,0 +1,22 @@
+
+# pixi environments
+.pixi
+*.egg-info
+
+# vscode settings
+.vscode/
+
+# python libraries
+*.ilk
+*.pyd
+*.pdb
+
+# python cache
+*.pyc
+
+# miscellaneous 
+*.tar.gz
+*.pcd
+*.txt
+*.xyz
+*.whl
