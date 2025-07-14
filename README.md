@@ -67,8 +67,8 @@ def compute_registration_matrix(
 
 **Inputs**
 
-- `pcd0_points` is a NumPy array of shape [N, 3] containing the N-points of the first point cloud.
-- `pcd1_points` is a NumPy array of shape [M, 3] containing the M-points of the second point cloud.
+- `pcd0_points` is a NumPy array of shape [N, 3] containing the N-points of the first point cloud;
+- `pcd1_points` is a NumPy array of shape [M, 3] containing the M-points of the second point cloud;
 - `lrf_radius` is the radius used to compute the Local Reference Frame (LRF) for descriptor computation;
 - `voxel_size` is the voxel size used to downsample the point clouds before registration;
 - `patches_per_pair` is the number of point patches randomly sampled per point cloud to compute descriptors;
