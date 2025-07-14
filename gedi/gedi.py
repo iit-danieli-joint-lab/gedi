@@ -224,7 +224,7 @@ class GeDi:
                        device='cpu')
 
         self.gedi_net = PointNet2Feature(dim=self.dim)
-        self.gedi_net.load_state_dict(torch.load(config['fchkpt_gedi_net'])['pnet_model_state_dict'])
+        self.gedi_net.load_state_dict(torch.load(config['fchkpt_gedi_net'], weights_only=False)['pnet_model_state_dict'])
         self.gedi_net.cuda().eval()
 
     def compute(self, pts, pcd):
