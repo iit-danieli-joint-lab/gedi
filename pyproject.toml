@@ -1,6 +1,6 @@
 [project]
 name = "gedi"
-version = "0.1.0"
+version = "0.2.0"
 description = "GEDI point cloud registration"
 authors = [{ name = "IIT-Danieli Joint Lab" }]
 requires-python = "==3.12"

@@ -4,8 +4,8 @@ import numpy as np
 import open3d as o3d
 
 def compute_registration_matrix(
-    pcd0_path: str,
-    pcd1_path: str,
+    pcd0_points: np.ndarray,
+    pcd1_points: np.ndarray,
     lrf_radius: float = 0.5,
     voxel_size: float = 0.01,
     patches_per_pair: int = 5000,
@@ -36,8 +36,10 @@ def compute_registration_matrix(
     }
 
     # load point clouds
-    pcd0 = o3d.io.read_point_cloud(pcd0_path)
-    pcd1 = o3d.io.read_point_cloud(pcd1_path)
+    pcd0 = o3d.geometry.PointCloud()
+    pcd1 = o3d.geometry.PointCloud()
+    pcd0.points = o3d.utility.Vector3dVector(pcd0_points)
+    pcd1.points = o3d.utility.Vector3dVector(pcd1_points)
 
     # initialise GeDi
     gedi = GeDi(config=config)
