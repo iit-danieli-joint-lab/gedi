@@ -1,0 +1,15 @@
+[build-system]
+requires = [
+    "setuptools>=65.0",
+    "wheel",
+    "numpy<2.0",
+
+    # Linux
+    "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp312-cp312-linux_x86_64.whl#sha256=badc14d413ff1847d15021a1ec0affa479d24dfc83e6d51b9b4b9fbfaad1b14c; sys_platform == 'linux'",
+
+    # Windows
+    "torch @ https://download.pytorch.org/whl/cu128/torch-2.7.1%2Bcu128-cp312-cp312-win_amd64.whl#sha256=2bb8c05d48ba815b316879a18195d53a6472a03e297d971e916753f8e1053d30; sys_platform == 'win32'",
+]
+build-backend = "setuptools.build_meta"
+
+

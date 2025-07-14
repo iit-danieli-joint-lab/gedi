@@ -1,0 +1,47 @@
+[project]
+name = "gedi"
+version = "0.1.0"
+description = "GEDI point cloud registration"
+authors = [{ name = "IIT-Danieli Joint Lab" }]
+requires-python = "==3.12"
+dependencies = [
+    "pip",
+    "gdown",
+    "tensorboard",
+    "protobuf",
+    "numpy<2.0",
+    "torchgeometry",
+]
+
+[project.optional-dependencies]
+linux = [
+    "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp312-cp312-linux_x86_64.whl#sha256=badc14d413ff1847d15021a1ec0affa479d24dfc83e6d51b9b4b9fbfaad1b14c",
+    "open3d @ https://files.pythonhosted.org/packages/2b/95/3723e5ade77c234a1650db11cbe59fe25c4f5af6c224f8ea22ff088bb36a/open3d-0.19.0-cp312-cp312-manylinux_2_31_x86_64.whl",
+    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/archive/pointnet2_ops-3.0.0-cp312-cp312-linux_x86_64.whl",
+]
+
+windows = [
+    "torch @ https://download.pytorch.org/whl/cu128/torch-2.7.1%2Bcu128-cp312-cp312-win_amd64.whl#sha256=2bb8c05d48ba815b316879a18195d53a6472a03e297d971e916753f8e1053d30",
+    "open3d @ https://github.com/isl-org/Open3D/releases/download/main-devel/open3d-0.19.0+083210b-cp312-cp312-win_amd64.whl",
+    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/archive/pointnet2_ops-3.0.0-cp312-cp312-win_amd64.whl",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+include = ["gedi/*.py", "gedi/assets/**"]
+
+[tool.pixi.workspace]
+channels = ["pytorch", "nvidia", "conda-forge"]
+platforms = ["linux-64", "win-64"]
+
+[tool.pixi.pypi-dependencies]
+build = "*"
+
+[tool.pixi.tasks]
+build-gedi = { cmd = "python -m build --wheel --outdir dist" }
