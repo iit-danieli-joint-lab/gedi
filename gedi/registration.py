@@ -3,9 +3,36 @@ import torch
 import numpy as np
 import open3d as o3d
 
-def compute_registration_matrix(
+def compute_registration_matrix_from_path(
     pcd0_path: str,
     pcd1_path: str,
+    lrf_radius: float = 0.5,
+    voxel_size: float = 0.01,
+    patches_per_pair: int = 5000,
+    max_correspondence_distance: float = 0.02,
+    edge_length_checker: float = 0.9,
+    distance_checker: float = 0.02,
+    ransac_iterations: int = 1000,
+    visualize: bool = False
+) -> np.ndarray:
+    pcd0 = o3d.io.read_point_cloud(pcd0_path)
+    pcd1 = o3d.io.read_point_cloud(pcd1_path)
+
+    return compute_registration_matrix(    
+    np.asarray(pcd0.points),
+    np.asarray(pcd1.points),
+    lrf_radius,
+    voxel_size,
+    patches_per_pair,
+    max_correspondence_distance,
+    edge_length_checker,
+    distance_checker,
+    ransac_iterations,
+    visualize) 
+
+def compute_registration_matrix(
+    pcd0_points: np.ndarray,
+    pcd1_points: np.ndarray,
     lrf_radius: float = 0.5,
     voxel_size: float = 0.01,
     patches_per_pair: int = 5000,
@@ -36,8 +63,10 @@ def compute_registration_matrix(
     }
 
     # load point clouds
-    pcd0 = o3d.io.read_point_cloud(pcd0_path)
-    pcd1 = o3d.io.read_point_cloud(pcd1_path)
+    pcd0 = o3d.geometry.PointCloud()
+    pcd1 = o3d.geometry.PointCloud()
+    pcd0.points = o3d.utility.Vector3dVector(pcd0_points)
+    pcd1.points = o3d.utility.Vector3dVector(pcd1_points)
 
     # initialise GeDi
     gedi = GeDi(config=config)
