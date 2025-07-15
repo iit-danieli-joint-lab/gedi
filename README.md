@@ -82,6 +82,16 @@ def compute_registration_matrix(
 
 - A `np.ndarray` 4×4 transformation matrix that aligns `pcd0` to `pcd1`.
 
+
+The function `compute_registration_matrix_from_path` provides the same registration logic as `compute_registration_matrix`, but loads the point clouds from paths instead of receiving them as NumPy arrays:
+
+**Differences in Inputs**
+
+- `pcd0_path` is the file path (string) to the first point cloud;
+- `pcd1_path` is the file path (string) to the second point cloud;
+
+All the other **Inputs** and the **Output** remain the same.
+
 ## Citations
 
 ```latex
