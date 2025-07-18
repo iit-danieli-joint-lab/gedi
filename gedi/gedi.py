@@ -9,8 +9,9 @@ from pointnet2_ops.pointnet2_modules import PointnetSAModule
 
 class tnet(nn.Module):
 
-    def __init__(self,):
+    def __init__(self, device):
         super(tnet, self).__init__()
+        self.device = device
 
         self.conv1 = nn.Sequential(nn.Conv1d(3, 256, 1, bias=False),
                                    nn.BatchNorm1d(256),
@@ -38,7 +39,7 @@ class tnet(nn.Module):
 
     def _forward_last_layer(self, x):
         x = self.fc3(x)
-        x = x + torch.eye(3, device='cuda').view(1, 9).repeat(x.size()[0], 1)
+        x = x + torch.eye(3, device=self.device).view(1, 9).repeat(x.size()[0], 1)
         x = x.view(-1, 3, 3)
         return x
 
@@ -59,6 +60,8 @@ class tnet(nn.Module):
 
 
 class qnet(tnet):
+    def __init__(self, device):
+        super().__init__(device=device)
 
     def _init_last_layer(self):
         self.fc3 = nn.Linear(256, 4, bias=True)
@@ -66,18 +69,18 @@ class qnet(tnet):
 
     def _forward_last_layer(self, x):
         quat = self.fc3(x)
-        quat = quat + torch.tensor([1, 0, 0, 0], device='cuda').repeat(quat.size()[0], 1)
+        quat = quat + torch.tensor([1, 0, 0, 0], device=self.device).repeat(quat.size()[0], 1)
         quat = F.normalize(quat, p=2, dim=1)
         return quat
 
 
 class PointNet2Feature(nn.Module):
 
-    def __init__(self, dim=32):
+    def __init__(self, device, dim=32):
         super(PointNet2Feature, self).__init__()
 
         self.use_xyz = True
-        self.qnet = qnet()
+        self.qnet = qnet(device=device)
 
         self.samodule1 = PointnetSAModule(
             npoint=128,
@@ -217,15 +220,20 @@ class GeDi:
         self.samples_per_patch_lrf = config['samples_per_patch_lrf']
         self.samples_per_patch_out = config['samples_per_patch_out']
         self.r_lrf = config['r_lrf']
+        self.device = config['device']
+
+        if self.device != 'cpu' and not torch.cuda.is_available():
+            self.device = 'cpu' # fallback to CPU if CUDA is not available
+            print('WARNING: CUDA is not available. Fallback to CPU.')
 
         self.lrf = LRF(patches_per_pair=self.samples_per_batch,
                        samples_per_patch=self.samples_per_patch_out,
                        r_lrf=self.r_lrf,
                        device='cpu')
 
-        self.gedi_net = PointNet2Feature(dim=self.dim)
-        self.gedi_net.load_state_dict(torch.load(config['fchkpt_gedi_net'], weights_only=False)['pnet_model_state_dict'])
-        self.gedi_net.cuda().eval()
+        self.gedi_net = PointNet2Feature(device=self.device, dim=self.dim)
+        self.gedi_net.load_state_dict(torch.load(config['fchkpt_gedi_net'], map_location=self.device, weights_only=False)['pnet_model_state_dict'])
+        self.gedi_net.to(self.device).eval()
 
     def compute(self, pts, pcd):
 
@@ -265,7 +273,7 @@ class GeDi:
             patch = self.lrf(pts[i_start:i_end], x)
 
             with torch.no_grad():
-                f = self.gedi_net(patch.cuda())
+                f = self.gedi_net(patch.to(self.device))
 
             pcd_desc[i_start:i_end] = f.cpu().detach().numpy()[:i_end - i_start]
 
@@ -273,8 +281,9 @@ class GeDi:
 
 
 if __name__ == '__main__':
-
-        x = torch.rand((100, 3, 512)).cuda()  # [npatches, xyz, npoints]
-        net = PointNet2Feature().cuda().eval()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Using device: {device}")
+        x = torch.rand((100, 3, 512))  # [npatches, xyz, npoints]
+        net = PointNet2Feature().to(device).eval()
         out = net(x)
         print(out.shape)
