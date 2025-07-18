@@ -14,10 +14,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-linux = [
+linux-cpu = [
+    "torch @ https://download.pytorch.org/whl/cpu/torch-2.2.2%2Bcpu-cp312-cp312-linux_x86_64.whl#sha256=431a747b5a880cf8e1fb6d58db6bfafa6768cbec76517d046854537c03323edf",
+    "open3d @ https://files.pythonhosted.org/packages/2b/95/3723e5ade77c234a1650db11cbe59fe25c4f5af6c224f8ea22ff088bb36a/open3d-0.19.0-cp312-cp312-manylinux_2_31_x86_64.whl",
+    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/v0.3.0/pointnet2_ops-3.1.0-cpu-cp312-cp312-linux_x86_64.whl",
+]
+
+linux-cuda = [
     "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp312-cp312-linux_x86_64.whl#sha256=badc14d413ff1847d15021a1ec0affa479d24dfc83e6d51b9b4b9fbfaad1b14c",
     "open3d @ https://files.pythonhosted.org/packages/2b/95/3723e5ade77c234a1650db11cbe59fe25c4f5af6c224f8ea22ff088bb36a/open3d-0.19.0-cp312-cp312-manylinux_2_31_x86_64.whl",
-    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/archive/pointnet2_ops-3.0.0-cp312-cp312-linux_x86_64.whl",
+    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/v0.3.0/pointnet2_ops-3.1.0-cu121-cp312-cp312-linux_x86_64.whl",
 ]
 
 windows-cpu = [
