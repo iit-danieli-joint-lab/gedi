@@ -1,15 +1,36 @@
+[project]
+name = "pointnet2_ops"
+version = "3.1.0"
+authors = [{ name = "Erik Wijmans"}]
+requires-python = "==3.12"
+dependencies = []
+
 [build-system]
 requires = [
     "setuptools>=65.0",
     "wheel",
     "numpy<2.0",
 
-    # Linux
-    "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp312-cp312-linux_x86_64.whl#sha256=badc14d413ff1847d15021a1ec0affa479d24dfc83e6d51b9b4b9fbfaad1b14c; sys_platform == 'linux'",
+    # COMMENT/UNCOMMENT CPU/CUDA VERSIONS BASED ON NEEDS
+    # Linux-CPU
+    # "torch @ https://download.pytorch.org/whl/cpu/torch-2.2.2%2Bcpu-cp312-cp312-linux_x86_64.whl#sha256=431a747b5a880cf8e1fb6d58db6bfafa6768cbec76517d046854537c03323edf ; sys_platform == 'linux'",
+    # Linux-CUDA
+    "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp312-cp312-linux_x86_64.whl#sha256=badc14d413ff1847d15021a1ec0affa479d24dfc83e6d51b9b4b9fbfaad1b14c ; sys_platform == 'linux'",
 
-    # Windows
-    "torch @ https://download.pytorch.org/whl/cu128/torch-2.7.1%2Bcu128-cp312-cp312-win_amd64.whl#sha256=2bb8c05d48ba815b316879a18195d53a6472a03e297d971e916753f8e1053d30; sys_platform == 'win32'",
+    # COMMENT/UNCOMMENT CPU/CUDA VERSIONS BASED ON NEEDS
+    # Windows-CPU
+    # "torch @ https://download.pytorch.org/whl/cpu/torch-2.7.1%2Bcpu-cp312-cp312-win_amd64.whl#sha256=0bc887068772233f532b51a3e8c8cfc682ae62bef74bf4e0c53526c8b9e4138f ; sys_platform == 'win32'",
+    # Windows-CUDA
+    "torch @ https://download.pytorch.org/whl/cu128/torch-2.7.1%2Bcu128-cp312-cp312-win_amd64.whl#sha256=2bb8c05d48ba815b316879a18195d53a6472a03e297d971e916753f8e1053d30 ; sys_platform == 'win32'",
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.pixi.workspace]
+channels = ["pytorch", "nvidia", "conda-forge"]
+platforms = ["linux-64", "win-64"]
 
+[tool.pixi.pypi-dependencies]
+build = "*"
+
+[tool.pixi.tasks]
+build-pointnet2_ops = { cmd = "python -m build --wheel --outdir dist" }

@@ -1,6 +1,6 @@
 [project]
 name = "gedi"
-version = "0.2.0"
+version = "0.3.0"
 description = "GEDI point cloud registration"
 authors = [{ name = "IIT-Danieli Joint Lab" }]
 requires-python = "==3.12"
@@ -20,10 +20,16 @@ linux = [
     "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/archive/pointnet2_ops-3.0.0-cp312-cp312-linux_x86_64.whl",
 ]
 
-windows = [
+windows-cpu = [
+    "torch @ https://download.pytorch.org/whl/cpu/torch-2.7.1%2Bcpu-cp312-cp312-win_amd64.whl#sha256=0bc887068772233f532b51a3e8c8cfc682ae62bef74bf4e0c53526c8b9e4138f",
+    "open3d @ https://github.com/isl-org/Open3D/releases/download/main-devel/open3d-0.19.0+083210b-cp312-cp312-win_amd64.whl",
+    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/v0.3.0/pointnet2_ops-3.1.0-cpu-cp312-cp312-win_amd64.whl",
+]
+
+windows-cuda = [
     "torch @ https://download.pytorch.org/whl/cu128/torch-2.7.1%2Bcu128-cp312-cp312-win_amd64.whl#sha256=2bb8c05d48ba815b316879a18195d53a6472a03e297d971e916753f8e1053d30",
     "open3d @ https://github.com/isl-org/Open3D/releases/download/main-devel/open3d-0.19.0+083210b-cp312-cp312-win_amd64.whl",
-    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/archive/pointnet2_ops-3.0.0-cp312-cp312-win_amd64.whl",
+    "pointnet2-ops @ https://github.com/iit-danieli-joint-lab/gedi/releases/download/v0.3.0/pointnet2_ops-3.1.0-cu128-cp312-cp312-win_amd64.whl",
 ]
 
 [build-system]
