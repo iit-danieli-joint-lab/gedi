@@ -6,7 +6,7 @@ Fork of [GeDi](https://github.com/fabiopoiesi/gedi). [Paper (pdf)](https://arxiv
 
 ### Linux 
 - Ubuntu 22.04
-- CUDA 12.1
+- CUDA 12.1 (optional)
 - Python 3.12
 - Torch 2.2.2
 - Open3D 0.19.0
@@ -15,7 +15,7 @@ Fork of [GeDi](https://github.com/fabiopoiesi/gedi). [Paper (pdf)](https://arxiv
 ### Windows
 
 - Windows 11
-- CUDA 12.8
+- CUDA 12.8 (optional)
 - Python 3.12
 - Torch 2.7.1
 - Open3D 0.19.0+083210b
@@ -35,13 +35,18 @@ The wheel will be created in `./dist` folder.
 
 ## pointnet2_ops Installation
 
-GeDi needs `pointnet2_ops`, so you need to create a wheel and then store it in https://github.com/iit-danieli-joint-lab/gedi/releases/tag/archive.
+GeDi needs `pointnet2_ops`, so you need to create a wheel and then upload it in the latest release (see [Releases](https://github.com/iit-danieli-joint-lab/gedi/releases/)).
 
-To build the wheel:
+Go to:
 
 ```
 cd gedi/backbones/pointnet2_ops_lib
-python -m build
+```
+
+and in `pyproject.toml` ensure you have (un)commented the correct `torch` version for your setup (CPU or CUDA). Then to build the wheel:
+
+```
+pixi run build-pointnet2_ops
 ```
 
 The wheel will be created in `./dist` folder.
@@ -61,7 +66,8 @@ def compute_registration_matrix(
     edge_length_checker: float = 0.9,
     distance_checker: float = 0.02,
     ransac_iterations: int = 1000,
-    visualize: bool = False
+    visualize: bool = False,
+    device: str = 'cuda'
 ) -> np.ndarray:
 ```
 
@@ -76,7 +82,8 @@ def compute_registration_matrix(
 - `edge_length_checker` is the edge length similarity threshold for the RANSAC correspondence checker;
 - `distance_checker` is the distance similarity threshold for the RANSAC correspondence checker;
 - `ransac_iterations` is the maximum number of RANSAC iterations;
-- `visualize` (bool) whether to visualize the clouds through Open3D visualizer.
+- `visualize` (bool) whether to visualize the clouds through Open3D visualizer;
+- `device` (str) whether to use **CPU** (`arg: 'cpu'`) or **GPU** (`arg: 'cuda'`) to run registration. **Note:** Inference on CPU takes roughly **6× more time** compared to GPU.
 
 **Output**
 

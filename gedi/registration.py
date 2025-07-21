@@ -13,7 +13,8 @@ def compute_registration_matrix_from_path(
     edge_length_checker: float = 0.9,
     distance_checker: float = 0.02,
     ransac_iterations: int = 1000,
-    visualize: bool = False
+    visualize: bool = False,
+    device: str = 'cuda'
 ) -> np.ndarray:
     pcd0 = o3d.io.read_point_cloud(pcd0_path)
     pcd1 = o3d.io.read_point_cloud(pcd1_path)
@@ -28,7 +29,8 @@ def compute_registration_matrix_from_path(
     edge_length_checker,
     distance_checker,
     ransac_iterations,
-    visualize) 
+    visualize,
+    device) 
 
 def compute_registration_matrix(
     pcd0_points: np.ndarray,
@@ -40,7 +42,8 @@ def compute_registration_matrix(
     edge_length_checker: float = 0.9,
     distance_checker: float = 0.02,
     ransac_iterations: int = 1000,
-    visualize: bool = False
+    visualize: bool = False,
+    device: str = 'cuda'
 ) -> np.ndarray:
     from .gedi import GeDi
 
@@ -59,7 +62,8 @@ def compute_registration_matrix(
         'samples_per_patch_lrf': 4000,          # num. of point to process with LRF
         'samples_per_patch_out': 512,           # num. of points to sample for pointnet++
         'r_lrf': lrf_radius,                    # LRF radius from input
-        'fchkpt_gedi_net': fchkpt_gedi_net      # path to checkpoint
+        'fchkpt_gedi_net': fchkpt_gedi_net,      # path to checkpoint
+        'device': device                        # device to use for registration     
     }
 
     # load point clouds
