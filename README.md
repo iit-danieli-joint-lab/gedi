@@ -59,6 +59,9 @@ The registration function `compute_registration_matrix` is structured as follows
 def compute_registration_matrix(
     pcd0_points: np.ndarray,
     pcd1_points: np.ndarray,
+    samples_per_batch: int = 500,
+    samples_per_patch_lrf: int = 4000,
+    samples_per_patch_out: int = 512,
     lrf_radius: float = 0.5,
     voxel_size: float = 0.01,
     patches_per_pair: int = 5000,
@@ -75,6 +78,9 @@ def compute_registration_matrix(
 
 - `pcd0_points` is a NumPy array of shape [N, 3] containing the N-points of the first point cloud;
 - `pcd1_points` is a NumPy array of shape [M, 3] containing the M-points of the second point cloud;
+- `samples_per_batch` is the number of samples taken from  `patches_per_pair` that are processed in a single batch; the number of batches will therefore be `patches_per_pair/samples_per_batch`;
+- `samples_per_patch_lrf` is the number of points to process with LRF;
+- `samples_per_patch_out` is the number of points to sample for pointnet++;
 - `lrf_radius` is the radius used to compute the Local Reference Frame (LRF) for descriptor computation;
 - `voxel_size` is the voxel size used to downsample the point clouds before registration;
 - `patches_per_pair` is the number of point patches randomly sampled per point cloud to compute descriptors;
