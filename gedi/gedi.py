@@ -6,6 +6,7 @@ import numpy as np
 import open3d.ml.torch as ml3d
 from pointnet2_ops.pointnet2_modules import PointnetSAModule
 
+torch.backends.mkldnn.enabled = False
 
 class tnet(nn.Module):
 

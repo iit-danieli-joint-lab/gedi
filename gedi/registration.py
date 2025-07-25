@@ -6,6 +6,9 @@ import open3d as o3d
 def compute_registration_matrix_from_path(
     pcd0_path: str,
     pcd1_path: str,
+    samples_per_batch: int = 500,
+    samples_per_patch_lrf: int = 4000,
+    samples_per_patch_out: int = 512,
     lrf_radius: float = 0.5,
     voxel_size: float = 0.01,
     patches_per_pair: int = 5000,
@@ -22,6 +25,9 @@ def compute_registration_matrix_from_path(
     return compute_registration_matrix(    
     np.asarray(pcd0.points),
     np.asarray(pcd1.points),
+    samples_per_batch,
+    samples_per_patch_lrf,
+    samples_per_patch_out,
     lrf_radius,
     voxel_size,
     patches_per_pair,
@@ -35,6 +41,9 @@ def compute_registration_matrix_from_path(
 def compute_registration_matrix(
     pcd0_points: np.ndarray,
     pcd1_points: np.ndarray,
+    samples_per_batch: int = 500,
+    samples_per_patch_lrf: int = 4000,
+    samples_per_patch_out: int = 512,
     lrf_radius: float = 0.5,
     voxel_size: float = 0.01,
     patches_per_pair: int = 5000,
@@ -58,9 +67,9 @@ def compute_registration_matrix(
 
     config = {
         'dim': 32,                              # descriptor output dimension
-        'samples_per_batch': 500,               # batches to process the data on GPU
-        'samples_per_patch_lrf': 4000,          # num. of point to process with LRF
-        'samples_per_patch_out': 512,           # num. of points to sample for pointnet++
+        'samples_per_batch': samples_per_batch,               # batches to process the data on GPU
+        'samples_per_patch_lrf': samples_per_patch_lrf,          # num. of point to process with LRF
+        'samples_per_patch_out': samples_per_patch_out,           # num. of points to sample for pointnet++
         'r_lrf': lrf_radius,                    # LRF radius from input
         'fchkpt_gedi_net': fchkpt_gedi_net,      # path to checkpoint
         'device': device                        # device to use for registration     
