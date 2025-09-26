@@ -54,6 +54,7 @@ platforms = ["linux-64", "win-64"]
 
 [tool.pixi.pypi-dependencies]
 build = "*"
+torch = { url = "https://download.pytorch.org/whl/cu128/torch-2.8.0%2Bcu128-cp312-cp312-win_amd64.whl" }
 
 [tool.pixi.tasks]
 build-gedi = { cmd = "python -m build --wheel --outdir dist" }
