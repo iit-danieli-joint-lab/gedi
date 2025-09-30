@@ -1,0 +1,49 @@
+name: GeDi Release Workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+  push:
+    branches:
+      - main
+
+jobs:
+  wheel-build:
+    # start only when: 
+    # - label wheel-build OR label release is activated on PR
+    # - or push/merge on main
+    if: github.event.label.name == 'wheel-build' || github.event_name == 'push'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022]
+        python-version: ["39", "310", "311", "312"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Print environment
+        run: env
+
+      - uses: prefix-dev/setup-pixi@v0.8.3
+
+      - name: Select Pixi environment
+        run: echo "PIX_ENV=py${{ matrix.python-version }}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Build wheel
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-22.04" ]]; then
+            pixi run -e $PIX_ENV wheel-build-linux
+          else
+            pixi run -e $PIX_ENV wheel-build-windows
+          fi
+        shell: bash
+
+      - name: Upload wheel as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: Release/*.whl
+

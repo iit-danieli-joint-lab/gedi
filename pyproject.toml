@@ -105,5 +105,5 @@ auditwheel = "*"
 
 [tool.pixi.tasks]
 wheel-build-gedi = { cmd = "python -m build --wheel --outdir dist --no-isolation && python wheel-repair.py" }
-wheel-build-windows = { depends-on = ["wheel-build-gedi"], cmd = "delvewheel repair dist\\*.whl -w Release && rm -rf dist" }
+wheel-build-windows = { depends-on = ["wheel-build-gedi"], cmd = "delvewheel repair dist\\*.whl -w Release --exclude c10.dll --exclude c10_cuda.dll --exclude torch_cpu.dll --exclude torch_cuda.dll  --exclude torch_python.dll --exclude cudart64_12.dll --exclude cudnn64_9.dll && rm -rf dist" }
 wheel-build-linux = { depends-on = ["wheel-build-gedi"], cmd = "auditwheel repair dist/*.whl -w Release && rm -rf dist" }
