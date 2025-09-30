@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchgeometry as tgm
 import numpy as np
-from pointnet2_ops.pointnet2_modules import PointnetSAModule
-import time
-from pointnet2_ops import gedi_radius_search_op
+    
+from gedi.backbones.pointnet2_ops.pointnet2_modules import PointnetSAModule, PointnetSAModuleMSG
+from gedi.backbones.pointnet2_ops import gedi_radius_search_op
 
 torch.backends.mkldnn.enabled = False
 
@@ -238,10 +238,7 @@ class GeDi:
         self.gedi_net.to(self.device).eval()
 
     def compute(self, pts, pcd):
-
-        radii = self.r_lrf * torch.ones((len(pts)))
-        start_time = time.time()
-     
+        radii = self.r_lrf * torch.ones((len(pts))) 
         out = gedi_radius_search_op.radius_search(
             pcd, pts, radii,
             torch.LongTensor([0, len(pcd)]),
@@ -252,9 +249,6 @@ class GeDi:
             True,         # return_distances
             False         # normalize_distances
         )
-        
-        elapsed = (time.time() - start_time) * 1000  # in ms
-        print(f"[DEBUG] gedi_radius_search_op execution time: {elapsed:.2f} milliseconds")
 
         pcd_desc = np.empty((len(pts), self.dim))
 

@@ -3,24 +3,31 @@ import torch.nn as nn
 import warnings
 from torch.autograd import Function
 from typing import *
+import os
 
 try:
-    import pointnet2_ops._ext as _ext
-except ImportError:
+    from . import _ext as _ext
+except ImportError as e:
+    # By default, do NOT JIT compile when imported from an installed wheel.
+    # Allow opting in by setting GEDI_POINTNET2_JIT=1 for development.
+    if os.environ.get("GEDI_POINTNET2_JIT", "0") not in {"1", "true", "True"}:
+        raise ImportError(
+            "pointnet2_ops native extension '_ext' not found. "
+            "This wheel expects the prebuilt extension to be included (e.g., .pyd/.so). "
+            "Set GEDI_POINTNET2_JIT=1 to allow runtime JIT compilation for development."
+        ) from e
+
     from torch.utils.cpp_extension import load
     import glob
     import os.path as osp
-    import os
-
-    warnings.warn("Unable to load pointnet2_ops cpp extension. JIT Compiling.")
 
     _ext_src_root = osp.join(osp.dirname(__file__), "_ext-src")
     _ext_sources = glob.glob(osp.join(_ext_src_root, "src", "*.cpp")) + glob.glob(
         osp.join(_ext_src_root, "src", "*.cu")
     )
-    _ext_headers = glob.glob(osp.join(_ext_src_root, "include", "*"))
+    # Optional: headers discovery, not required by load()
 
-    os.environ["TORCH_CUDA_ARCH_LIST"] = "3.7+PTX;5.0;6.0;6.1;6.2;7.0;7.5"
+    os.environ.setdefault("TORCH_CUDA_ARCH_LIST", "3.7+PTX;5.0;6.0;6.1;6.2;7.0;7.5")
     _ext = load(
         "_ext",
         sources=_ext_sources,
@@ -139,7 +146,7 @@ three_nn = ThreeNN.apply
 class ThreeInterpolate(Function):
     @staticmethod
     def forward(ctx, features, idx, weight):
-        # type(Any, torch.Tensor, torch.Tensor, torch.Tensor) -> Torch.Tensor
+    # type(Any, torch.Tensor, torch.Tensor, torch.Tensor) -> torch.Tensor
         r"""
             Performs weight linear interpolation on 3 features
         Parameters
@@ -294,7 +301,7 @@ class QueryAndGroup(nn.Module):
         self.radius, self.nsample, self.use_xyz = radius, nsample, use_xyz
 
     def forward(self, xyz, new_xyz, features=None):
-        # type: (QueryAndGroup, torch.Tensor. torch.Tensor, torch.Tensor) -> Tuple[Torch.Tensor]
+    # type: (QueryAndGroup, torch.Tensor, torch.Tensor, torch.Tensor) -> Tuple[torch.Tensor]
         r"""
         Parameters
         ----------
