@@ -11,14 +11,19 @@ on:
 jobs:
   wheel-build:
     # start only when: 
-    # - label wheel-build OR label release is activated on PR
+    # - label wheel-build is added to a PR
     # - or push/merge on main
     if: github.event.label.name == 'wheel-build' || github.event_name == 'push'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022]
-        python-version: ["39", "310", "311", "312"]
+        pixi-env: [
+          py39-cpu, py39-cu118, py39-cu121, py39-cu124, py39-cu126, py39-cu128, py39-cu129,
+          py310-cpu, py310-cu118, py310-cu121, py310-cu124, py310-cu126, py310-cu128, py310-cu129,
+          py311-cpu, py311-cu118, py311-cu121, py311-cu124, py311-cu126, py311-cu128, py311-cu129,
+          py312-cpu, py312-cu118, py312-cu121, py312-cu124, py312-cu126, py312-cu128, py312-cu129
+        ]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +34,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.3
 
       - name: Select Pixi environment
-        run: echo "PIX_ENV=py${{ matrix.python-version }}" >> $GITHUB_ENV
+        run: echo "PIX_ENV=${{ matrix.pixi-env }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Build wheel
@@ -44,6 +49,6 @@ jobs:
       - name: Upload wheel as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.os }}-py${{ matrix.python-version }}
+          name: wheel-${{ matrix.os }}-${{ matrix.pixi-env }}
           path: Release/*.whl
 
