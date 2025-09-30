@@ -89,6 +89,11 @@ def get_extensions():
     # -----------------------------
     # RadiusSearch extension
     # -----------------------------
+    if os.name == "nt":  # Windows
+        extra_compile_args = {"cxx": ["/utf-8"]}
+    else:  # Linux
+        extra_compile_args = {"cxx": ["-finput-charset=UTF-8", "-fexec-charset=UTF-8"]}
+
     radius_search_ext = CppExtension(
         name="gedi.backbones.pointnet2_ops.gedi_radius_search_op",
         sources=[
@@ -98,7 +103,7 @@ def get_extensions():
         include_dirs=o3d_includes + pixi_includes,
         library_dirs=pixi_libdirs,
         libraries=pixi_libs,
-        extra_compile_args={"cxx": ["/std:c++17", "/utf-8", "/MD"]},
+        extra_compile_args=extra_compile_args,
         define_macros=[],
     )
 
