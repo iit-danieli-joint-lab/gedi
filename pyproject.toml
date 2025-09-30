@@ -90,6 +90,10 @@ py312-cu126 = ["py312", "torch-cu126"]
 py312-cu128 = ["py312", "torch-cu128"]
 py312-cu129 = ["py312", "torch-cu129"]
 
+[tool.pixi.target.linux.dependencies]
+libgcc = "<=11.3.0"  # To support building wheels compatible with glibc >= 2.35 (default conda-forge build targets >= 2.39, while e.g. Ubuntu 22.04 comes with glibc 2.35).
+gcc = "<=11.3.0"
+
 [tool.pixi.pypi-dependencies]
 build = "*"
 wheel = "*"
@@ -106,4 +110,4 @@ auditwheel = "*"
 [tool.pixi.tasks]
 wheel-build-gedi = { cmd = "python -m build --wheel --outdir dist --no-isolation && python wheel-repair.py" }
 wheel-build-windows = { depends-on = ["wheel-build-gedi"], cmd = "delvewheel repair dist\\*.whl -w Release --exclude c10.dll --exclude c10_cuda.dll --exclude torch_cpu.dll --exclude torch_cuda.dll  --exclude torch_python.dll --exclude cudart64_12.dll --exclude cudnn64_9.dll && rm -rf dist" }
-wheel-build-linux = { depends-on = ["wheel-build-gedi"], cmd = "auditwheel repair dist/*.whl -w Release && rm -rf dist" }
+wheel-build-linux = { depends-on = ["wheel-build-gedi"], cmd = "auditwheel repair dist/*.whl -w Release --exclude libc10.so --exclude libc10_cuda.so --exclude libtorch.so --exclude libtorch_cpu.so --exclude libtorch_cuda.so --exclude libtorch_python.so --exclude libcudart.so.12 --exclude libcudnn.so.9 && rm -rf dist" }
