@@ -1,4 +1,5 @@
 from pathlib import Path
+from packaging.version import parse as parse_version
 import shutil
 import sys
 import platform
@@ -32,6 +33,11 @@ try:
     version, cuda_tag = m.groups()
     cuda_tag = cuda_tag or "cpu"
 
+    if (system == "linux" and (cuda_tag.startswith("cu") 
+            and int(cuda_tag[2:]) < 126 or (cuda_tag == "cpu" 
+            and parse_version(version) < parse_version("2.6.0")))):
+        arch = "linux_x86_64"  # old linux tag
+
     pyver = f"{sys.version_info.major}{sys.version_info.minor}"  # e.g., 312
     torch_url = f"https://download.pytorch.org/whl/{cuda_tag}/torch-{version}%2B{cuda_tag}-cp{pyver}-cp{pyver}-{arch}{ext}"
     print(f"Using torch URL: {torch_url}")
@@ -58,9 +64,24 @@ try:
 
     # Patch METADATA: replace/add Requires-Dist for torch
     lines = metadata_file.read_text().splitlines()
-    new_lines = [l for l in lines if not l.startswith("Requires-Dist: torch")]
-    new_lines.append(f"Requires-Dist: torch @ {torch_url}")
-    metadata_file.write_text("\n".join(new_lines))
+    new_lines = []
+    torch_added = False
+
+    for i, line in enumerate(lines):
+        if line.startswith("Requires-Dist: torch"):
+            continue
+        new_lines.append(line)
+
+        # Adds the torch URL immediately after the last existing Requires-Dist
+        next_line = lines[i + 1] if i + 1 < len(lines) else ""
+        if not torch_added and (line.startswith("Requires-Dist:") and not next_line.startswith("Requires-Dist:")):
+            new_lines.append(f"Requires-Dist: torch @ {torch_url}")
+            torch_added = True
+
+    # If we haven't added Torch yet (e.g., no Requires-Dist present), add it at the end
+    if not torch_added:
+        new_lines.append(f"Requires-Dist: torch @ {torch_url}")
+    metadata_file.write_text("\n".join(new_lines) + "\n")
 
     # Repack wheel (overwrite original)
     with zipfile.ZipFile(wheel_path, "w", compression=zipfile.ZIP_DEFLATED) as zip_out:
