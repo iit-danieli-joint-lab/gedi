@@ -158,7 +158,6 @@ def compute_registration_matrix(
 
     return est_result01.transformation
 
-# python registration.py --pcd0 C://Users//gcorrenti//new//gedi//data//assets//left_pcd.pcd --pcd1 C://Users//gcorrenti//new//gedi//data//assets//pointcloud_0_pcd.pcd --visualize
 # -------------------------------
 # Entry point from command line
 # -------------------------------
