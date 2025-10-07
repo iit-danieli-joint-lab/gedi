@@ -52,83 +52,79 @@ jobs:
           path: Release/*.whl
 
   publish:
-    # start only when: 
-    # - A Release is published  
     needs: wheel-build
     if: github.event.label.name == 'wheel-build' || github.event_name == 'release'
     runs-on: ubuntu-22.04
-
     steps:
-      # Download all artifacts produced by the wheel-build matrix
-      - name: Download wheel artifacts
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+          path: gh-pages
+
+      - name: Download all wheel artifacts
         uses: actions/download-artifact@v4
         with:
-          path: Release
+          path: downloaded-artifacts
 
-      # Configure Git for deployment
-      - name: Setup Git
+      - name: Organize wheels and generate index
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      # Generate/Update wheel index using external script
-      - name: Generate/Update wheel index
-        run: |
-          python - <<'EOF'
+          mkdir -p gh-pages/simple/gedi/{cpu,cu118,cu121,cu124,cu126,cu128,cu129}
+          
+          # Organizza le wheel basate sul nome
+          for artifact_dir in downloaded-artifacts/*; do
+            if [[ -d "$artifact_dir" ]]; then
+              for whl in "$artifact_dir"/*.whl; do
+                if [[ "$whl" == *"+cpu"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cpu/
+                elif [[ "$whl" == *"+cu118"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu118/
+                elif [[ "$whl" == *"+cu121"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu121/
+                elif [[ "$whl" == *"+cu124"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu124/
+                elif [[ "$whl" == *"+cu126"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu126/
+                elif [[ "$whl" == *"+cu128"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu128/
+                elif [[ "$whl" == *"+cu129"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu129/
+                else
+                  cp "$whl" gh-pages/simple/gedi/cpu/  # Fallback
+                fi
+              done
+            fi
+          done
+          
+          # Genera index.html per ogni sottocartella e principale
+          python3 -c "
           import os
-          import shutil
+          def gen_index(path, include_subdirs=False):
+              files = [f for f in os.listdir(path) if f.endswith('.whl')]
+              if include_subdirs:
+                  subdirs = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d)) and d not in ['.', '..']]
+                  for sub in subdirs:
+                      sub_files = [os.path.join(sub, f) for f in os.listdir(os.path.join(path, sub)) if f.endswith('.whl')]
+                      files.extend(sub_files)
+              with open(os.path.join(path, 'index.html'), 'w') as f:
+                  f.write('<!DOCTYPE html><html><body>\\n')
+                  for file in sorted(files):
+                      f.write(f'<a href=\"{file}\">{file}</a><br>\\n')
+                  f.write('</body></html>\\n')
+          
+          base_path = 'gh-pages/simple/gedi'
+          for sub in ['cpu', 'cu118', 'cu121', 'cu124', 'cu126', 'cu128', 'cu129']:
+              if os.path.exists(os.path.join(base_path, sub)):
+                  gen_index(os.path.join(base_path, sub))
+          gen_index(base_path, include_subdirs=True)
+          "
 
-          base_dir = "whl-index"
-          subdirs = ["cpu", "cu118","cu121","cu124","cu126","cu128","cu129"]
-
-          os.makedirs(base_dir, exist_ok=True)
-          index_main = os.path.join(base_dir, "index.html")
-          if not os.path.exists(index_main):
-              with open(index_main, "w") as f:
-                  f.write("<html><body>\n</body></html>")
-
-          for d in subdirs:
-              subdir_path = os.path.join(base_dir, d)
-              os.makedirs(subdir_path, exist_ok=True)
-              index_file = os.path.join(subdir_path, "index.html")
-              if not os.path.exists(index_file):
-                  with open(index_file, "w") as f:
-                      f.write("<html><body>\n</body></html>")
-
-          def update_index(wheel_path):
-              whl_name = os.path.basename(wheel_path)
-              if "+cpu" in whl_name:
-                  subdir = os.path.join(base_dir, "cpu")
-              elif "+cu" in whl_name:
-                  cu_ver = whl_name.split("+cu")[1].split("_")[0]
-                  subdir = os.path.join(base_dir, f"cu{cu_ver}")
-              else:
-                  subdir = base_dir
-
-              os.makedirs(subdir, exist_ok=True)
-              dest_path = os.path.join(subdir, whl_name)
-              if not os.path.exists(dest_path):
-                  shutil.copy2(wheel_path, dest_path)
-
-              index_file = os.path.join(subdir, "index.html")
-              with open(index_file, "r") as f:
-                  content = f.read()
-              if whl_name not in content:
-                  content = content.replace("</body></html>", f'<a href="{whl_name}">{whl_name}</a><br>\n</body></html>')
-                  with open(index_file, "w") as f:
-                      f.write(content)
-
-          for whl in os.listdir("Release"):
-              if whl.endswith(".whl"):
-                  update_index(os.path.join("Release", whl))
-          EOF
-
-      # Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          publish_dir: ./whl-index
-          publish_branch: gh-pages
-          keep_files: true 
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and push to gh-pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update wheels"
+          git push origin gh-pages
