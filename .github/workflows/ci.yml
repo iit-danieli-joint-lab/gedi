@@ -64,8 +64,8 @@ jobs:
         with:
           path: dist_artifacts
 
-        - name: Install Twine
-          run: pip install twine
+      - name: Install Twine
+        run: pip install twine
 
       - name: Move wheels to dist/
         run: |
