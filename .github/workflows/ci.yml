@@ -129,4 +129,6 @@ jobs:
         with:
           publish_dir: ./whl-index
           publish_branch: gh-pages
-
+          keep_files: true 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
