@@ -1,0 +1,12 @@
+# ninja log v7
+95	32391	7810060882525522	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/interpolate.obj	5f600f36086b95af
+23	32510	7810060881799930	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/ball_query.obj	d05f2138246f1c6c
+57	32541	7810060882140152	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/bindings.obj	8a5c15cc3be3c50c
+69	32821	7810060882260319	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/group_points.obj	f0f17013fbb56150
+121	32855	7810060882788162	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/sampling.obj	f6f29e7d5bdba841
+44	66128	7810060882016098	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/ball_query_gpu.obj	317cb678a050b1bf
+81	66525	7810060882390307	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/group_points_gpu.obj	6135f17b9f445709
+105	67424	7810060882617766	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/interpolate_gpu.obj	faa23d8899496a79
+128	68308	7810060882848150	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/sampling_gpu.obj	e7d3585f60781fec
+65	18496	7810061607338129	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/RadiusSearchOpKernel.obj	33920ead3afc2bb5
+76	26290	7810061607448191	C:/Users/gcorrenti/gedi/build/temp.win-amd64-cpython-312/Release/gedi/backbones/pointnet2_ops/_ext-src/src/RadiusSearchOps.obj	864732c056983093

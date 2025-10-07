@@ -1,0 +1,7 @@
+pip
+gdown
+tensorboard
+protobuf
+numpy
+torchgeometry
+open3d

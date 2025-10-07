@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: gedi
+Version: 0.4.0+cu128
+Summary: GEDI point cloud registration
+Author: IIT-Danieli Joint Lab
+Requires-Python: >=3.9.0
+Requires-Dist: pip
+Requires-Dist: gdown
+Requires-Dist: tensorboard
+Requires-Dist: protobuf
+Requires-Dist: numpy
+Requires-Dist: torchgeometry
+Requires-Dist: open3d
