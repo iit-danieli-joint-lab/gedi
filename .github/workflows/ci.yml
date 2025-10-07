@@ -55,28 +55,30 @@ jobs:
     # start only when: 
     # - A Release is published  
     needs: wheel-build
-    if: github.event_name == 'release'
+    if: github.event.label.name == 'wheel-build' || github.event_name == 'release'
     runs-on: ubuntu-22.04
     
     steps:
+      # Download all artifacts produced by the wheel-build matrix
       - name: Download wheel artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist_artifacts
+          path: Release
 
-      - name: Install Twine
-        run: pip install twine
-
-      - name: Move wheels to dist/
+      # Configure Git for deployment
+      - name: Setup Git
         run: |
-          mkdir -p dist
-          find dist_artifacts -name "*.whl" -exec mv {} dist/ \;
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Check wheels
-        run: twine check dist/*
+      # Generate/Update wheel index using external script
+      - name: Generate/Update wheel index
+        run: python .github/workflows/populate_index.py
 
-      - name: Publish to GitHub Packages
-        env:
-          TWINE_USERNAME: Luca0101
-          TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN }}
-        run: twine upload --repository-url https://upload.pypi.pkg.github.com/${{ github.repository_owner }} dist/*
+      # Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v6
+        with:
+          publish_dir: ./whl-index
+          publish_branch: gh-pages
+
