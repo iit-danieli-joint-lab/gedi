@@ -2,56 +2,34 @@
 
 Fork of [GeDi](https://github.com/fabiopoiesi/gedi). [Paper (pdf)](https://arxiv.org/pdf/2105.10382.pdf)
 
-## Tested with
+## Currently built for:
+- Windows/Linux OS
+- Python: **3.9/3.10/3.11/3.12**
+- CPU
+- CUDA: **11.8/12.1/12.4/12.6/12.8/12.9**
+- CUDA_ARCH: **6.0/6.1/7.5/8.6/8.9**
 
-### Linux 
-- Ubuntu 22.04
-- CUDA 12.1 (optional)
-- Python 3.12
-- Torch 2.2.2
-- Open3D 0.19.0
-- [torchgeometry v0.1.2](https://kornia.readthedocs.io/en/v0.1.2/)
+## Wheel build for developers
+Required: Install [pixi](https://pixi.sh/latest/).
 
-### Windows
+To build the wheel of GeDi, you first need to choose the Python/CPU/CUDA versions with which the wheel will be built (example: **"py312-cu124"**). 
+Replace `PIXI_ENV` placeholder in the commands below with your environment name.
 
-- Windows 11
-- CUDA 12.8 (optional)
-- Python 3.12
-- Torch 2.7.1
-- Open3D 0.19.0+083210b
-- [torchgeometry v0.1.2](https://kornia.readthedocs.io/en/v0.1.2/)
-
-## Installation
-
-**(Optional)** If you want to update the version of `pointnet2_ops` see [pointnet2_ops Installation](#pointnet2_ops-installation).
-
-To build the wheel of GeDi:
+Run on Windows:
 
 ```
-pixi run build-gedi
+pixi run -e PIXI_ENV wheel-build-windows
 ```
 
-The wheel will be created in `./dist` folder.
-
-## pointnet2_ops Installation
-
-GeDi needs `pointnet2_ops`, so you need to create a wheel and then upload it in the latest release (see [Releases](https://github.com/iit-danieli-joint-lab/gedi/releases/)).
-
-Go to:
+Run on Linux:
 
 ```
-cd gedi/backbones/pointnet2_ops_lib
+pixi run -e PIXI_ENV wheel-build-linux
 ```
 
-and in `pyproject.toml` ensure you have (un)commented the correct `torch` version for your setup (CPU or CUDA). Then to build the wheel:
+The wheel will be created in `./Release` folder.
 
-```
-pixi run build-pointnet2_ops
-```
-
-The wheel will be created in `./dist` folder.
-
-## registration.py
+## Code overview: registration.py
 
 The registration function `compute_registration_matrix` is structured as follows:
 
@@ -104,6 +82,14 @@ The function `compute_registration_matrix_from_path` provides the same registrat
 - `pcd1_path` is the file path (string) to the second point cloud;
 
 All the other **Inputs** and the **Output** remain the same.
+
+## Use of registration.py from command line
+
+If you want to test or debug locally the registration you can run (replace **PIXI_ENV placeholder** with your environment tag):
+
+```
+pixi run -e PIXI_ENV python registration.py --pcd0 /path/to/cloud0 --pcd1 /path/to/cloud1 --visualize --device cuda
+```
 
 ## Citations
 

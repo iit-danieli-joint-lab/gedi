@@ -1,0 +1,82 @@
+name: GeDi Release Workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+  release:
+    types: [published]
+
+jobs:
+  wheel-build:
+    # start only when: 
+    # - label wheel-build is added to a PR
+    # - or a Release is published
+    if: github.event.label.name == 'wheel-build' || github.event_name == 'release'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022]
+        pixi-env: [
+          py39-cpu, py39-cu118, py39-cu121, py39-cu124, py39-cu126, py39-cu128, py39-cu129,
+          py310-cpu, py310-cu118, py310-cu121, py310-cu124, py310-cu126, py310-cu128, py310-cu129,
+          py311-cpu, py311-cu118, py311-cu121, py311-cu124, py311-cu126, py311-cu128, py311-cu129,
+          py312-cpu, py312-cu118, py312-cu121, py312-cu124, py312-cu126, py312-cu128, py312-cu129
+        ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Print environment
+        run: env
+
+      - uses: prefix-dev/setup-pixi@v0.8.3
+
+      - name: Select Pixi environment
+        run: echo "PIX_ENV=${{ matrix.pixi-env }}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Build wheel
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-22.04" ]]; then
+            pixi run -e $PIX_ENV wheel-build-linux
+          else
+            pixi run -e $PIX_ENV wheel-build-windows
+          fi
+        shell: bash
+
+      - name: Upload wheel as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}-${{ matrix.pixi-env }}
+          path: Release/*.whl
+
+  publish:
+      # start only when: 
+      # - A Release is published      
+      needs: wheel-build
+      if: github.event_name == 'release'
+      runs-on: ubuntu-22.04
+
+      steps:
+        - name: Download wheel artifacts
+          uses: actions/download-artifact@v4
+          with:
+            path: dist_artifacts
+
+        - name: Install Twine
+          run: pip install twine
+
+        - name: Move wheels to dist/
+          run: |
+            mkdir -p dist
+            find dist_artifacts -name "*.whl" -exec mv {} dist/ \;
+
+        - name: Check wheels
+          run: twine check dist/*
+
+        - name: Publish to PyPI
+          env:
+            TWINE_USERNAME: __token__
+            TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          run: twine upload dist/*

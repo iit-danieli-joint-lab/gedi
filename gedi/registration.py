@@ -2,21 +2,29 @@ import sys
 import torch
 import numpy as np
 import open3d as o3d
+import argparse
+
+try:
+    # Release: installed via pip
+    from .gedi import GeDi
+except ImportError:
+    # Debug: run from source code
+    from gedi import GeDi
 
 def compute_registration_matrix_from_path(
     pcd0_path: str,
     pcd1_path: str,
-    samples_per_batch: int = 500,
-    samples_per_patch_lrf: int = 4000,
+    samples_per_batch: int = 100,
+    samples_per_patch_lrf: int = 800,
     samples_per_patch_out: int = 512,
-    lrf_radius: float = 0.5,
-    voxel_size: float = 0.01,
-    patches_per_pair: int = 5000,
-    max_correspondence_distance: float = 0.02,
+    lrf_radius: float = 30,
+    voxel_size: float = 3,
+    patches_per_pair: int = 1000,
+    max_correspondence_distance: float = 3,
     edge_length_checker: float = 0.9,
-    distance_checker: float = 0.02,
-    ransac_iterations: int = 1000,
-    visualize: bool = False,
+    distance_checker: float = 2.6,
+    ransac_iterations: int = 3000,
+    visualize: bool = True,
     device: str = 'cuda'
 ) -> np.ndarray:
     pcd0 = o3d.io.read_point_cloud(pcd0_path)
@@ -54,7 +62,6 @@ def compute_registration_matrix(
     visualize: bool = False,
     device: str = 'cuda'
 ) -> np.ndarray:
-    from .gedi import GeDi
 
     try:
         import importlib.resources as pkg_resources
@@ -62,8 +69,8 @@ def compute_registration_matrix(
         import importlib_resources as pkg_resources  
 
     # getting checkpoint
-    with pkg_resources.files('gedi').joinpath('assets/chkpt.tar') as chkpt_path:
-        fchkpt_gedi_net = str(chkpt_path)
+    chkpt_path = pkg_resources.files('gedi').joinpath('assets/chkpt.tar')
+    fchkpt_gedi_net = str(chkpt_path)
 
     config = {
         'dim': 32,                              # descriptor output dimension
@@ -150,3 +157,46 @@ def compute_registration_matrix(
         o3d.visualization.draw_geometries([pcd0, pcd1])
 
     return est_result01.transformation
+
+# -------------------------------
+# Entry point from command line
+# -------------------------------
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Compute registration matrix between two point clouds")
+    parser.add_argument("--pcd0", type=str, required=True, help="Path to the first point cloud")
+    parser.add_argument("--pcd1", type=str, required=True, help="Path to the second point cloud")
+
+    # Optional parameters
+    parser.add_argument("--samples_per_batch", type=int, default=100)
+    parser.add_argument("--samples_per_patch_lrf", type=int, default=800)
+    parser.add_argument("--samples_per_patch_out", type=int, default=512)
+    parser.add_argument("--lrf_radius", type=float, default=30)
+    parser.add_argument("--voxel_size", type=float, default=3)
+    parser.add_argument("--patches_per_pair", type=int, default=1000)
+    parser.add_argument("--max_correspondence_distance", type=float, default=3)
+    parser.add_argument("--edge_length_checker", type=float, default=0.9)
+    parser.add_argument("--distance_checker", type=float, default=2.6)
+    parser.add_argument("--ransac_iterations", type=int, default=3000)
+    parser.add_argument("--visualize", action="store_true", help="Visualize the point clouds")
+    parser.add_argument("--device", type=str, default="cuda", help="Device to use: 'cuda' or 'cpu'")
+
+    args = parser.parse_args()
+
+    pcdtransform = compute_registration_matrix_from_path(
+        pcd0_path=args.pcd0,
+        pcd1_path=args.pcd1,
+        samples_per_batch=args.samples_per_batch,
+        samples_per_patch_lrf=args.samples_per_patch_lrf,
+        samples_per_patch_out=args.samples_per_patch_out,
+        lrf_radius=args.lrf_radius,
+        voxel_size=args.voxel_size,
+        patches_per_pair=args.patches_per_pair,
+        max_correspondence_distance=args.max_correspondence_distance,
+        edge_length_checker=args.edge_length_checker,
+        distance_checker=args.distance_checker,
+        ransac_iterations=args.ransac_iterations,
+        visualize=args.visualize,
+        device=args.device
+    )
+
+    print("Registration transformation matrix:\n", pcdtransform)
