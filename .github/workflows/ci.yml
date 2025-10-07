@@ -4,16 +4,15 @@ on:
   workflow_dispatch:
   pull_request:
     types: [labeled]
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
 
 jobs:
   wheel-build:
     # start only when: 
     # - label wheel-build is added to a PR
-    # - or push/merge on main
-    if: github.event.label.name == 'wheel-build' || github.event_name == 'push'
+    # - or a Release is published
+    if: github.event.label.name == 'wheel-build' || github.event_name == 'release'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -52,3 +51,32 @@ jobs:
           name: wheel-${{ matrix.os }}-${{ matrix.pixi-env }}
           path: Release/*.whl
 
+  publish:
+      # start only when: 
+      # - A Release is published      
+      needs: wheel-build
+      if: github.event_name == 'release'
+      runs-on: ubuntu-22.04
+
+      steps:
+        - name: Download wheel artifacts
+          uses: actions/download-artifact@v4
+          with:
+            path: dist_artifacts
+
+        - name: Install Twine
+          run: pip install twine
+
+        - name: Move wheels to dist/
+          run: |
+            mkdir -p dist
+            find dist_artifacts -name "*.whl" -exec mv {} dist/ \;
+
+        - name: Check wheels
+          run: twine check dist/*
+
+        - name: Publish to PyPI
+          env:
+            TWINE_USERNAME: __token__
+            TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          run: twine upload dist/*
