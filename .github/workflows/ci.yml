@@ -52,6 +52,9 @@ jobs:
           path: Release/*.whl
 
   publish:
+    # start only when: 
+    # - label wheel-build is added to a PR
+    # - or a Release is published
     needs: wheel-build
     if: github.event.label.name == 'wheel-build' || github.event_name == 'release'
     runs-on: ubuntu-22.04
@@ -72,7 +75,7 @@ jobs:
         run: |
           mkdir -p gh-pages/simple/gedi/{cpu,cu118,cu121,cu124,cu126,cu128,cu129}
           
-          # Organizza le wheel basate sul nome
+          # Organize wheels into subfolders based on their tags
           for artifact_dir in downloaded-artifacts/*; do
             if [[ -d "$artifact_dir" ]]; then
               for whl in "$artifact_dir"/*.whl; do
@@ -97,7 +100,7 @@ jobs:
             fi
           done
           
-          # Genera index.html per ogni sottocartella e principale
+          # Generate index.html for each subfolder and the main folder
           python3 -c "
           import os
           def gen_index(path, include_subdirs=False):
