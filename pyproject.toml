@@ -1,5 +1,5 @@
 [project]
-name = "gedi"
+name = "idjl_gedi"
 dynamic = ["version"]
 description = "GEDI point cloud registration"
 authors = [{ name = "IIT-Danieli Joint Lab" }]

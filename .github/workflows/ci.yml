@@ -53,30 +53,81 @@ jobs:
 
   publish:
     # start only when: 
-    # - A Release is published  
+    # - label wheel-build is added to a PR
+    # - or a Release is published
     needs: wheel-build
-    if: github.event_name == 'release'
+    if: github.event.label.name == 'wheel-build' || github.event_name == 'release'
     runs-on: ubuntu-22.04
-    
     steps:
-      - name: Download wheel artifacts
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+          path: gh-pages
+
+      - name: Download all wheel artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist_artifacts
+          path: downloaded-artifacts
 
-      - name: Install Twine
-        run: pip install twine
-
-      - name: Move wheels to dist/
+      - name: Organize wheels and generate index
         run: |
-          mkdir -p dist
-          find dist_artifacts -name "*.whl" -exec mv {} dist/ \;
+          mkdir -p gh-pages/simple/gedi/{cpu,cu118,cu121,cu124,cu126,cu128,cu129}
+          
+          # Organize wheels into subfolders based on their tags
+          for artifact_dir in downloaded-artifacts/*; do
+            if [[ -d "$artifact_dir" ]]; then
+              for whl in "$artifact_dir"/*.whl; do
+                if [[ "$whl" == *"+cpu"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cpu/
+                elif [[ "$whl" == *"+cu118"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu118/
+                elif [[ "$whl" == *"+cu121"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu121/
+                elif [[ "$whl" == *"+cu124"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu124/
+                elif [[ "$whl" == *"+cu126"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu126/
+                elif [[ "$whl" == *"+cu128"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu128/
+                elif [[ "$whl" == *"+cu129"* ]]; then
+                  cp "$whl" gh-pages/simple/gedi/cu129/
+                else
+                  cp "$whl" gh-pages/simple/gedi/cpu/  # Fallback
+                fi
+              done
+            fi
+          done
+          
+          # Generate index.html for each subfolder and the main folder
+          python3 -c "
+          import os
+          def gen_index(path, include_subdirs=False):
+              files = [f for f in os.listdir(path) if f.endswith('.whl')]
+              if include_subdirs:
+                  subdirs = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d)) and d not in ['.', '..']]
+                  for sub in subdirs:
+                      sub_files = [os.path.join(sub, f) for f in os.listdir(os.path.join(path, sub)) if f.endswith('.whl')]
+                      files.extend(sub_files)
+              with open(os.path.join(path, 'index.html'), 'w') as f:
+                  f.write('<!DOCTYPE html><html><body>\\n')
+                  for file in sorted(files):
+                      f.write(f'<a href=\"{file}\">{file}</a><br>\\n')
+                  f.write('</body></html>\\n')
+          
+          base_path = 'gh-pages/simple/gedi'
+          for sub in ['cpu', 'cu118', 'cu121', 'cu124', 'cu126', 'cu128', 'cu129']:
+              if os.path.exists(os.path.join(base_path, sub)):
+                  gen_index(os.path.join(base_path, sub))
+          gen_index(base_path, include_subdirs=True)
+          "
 
-      - name: Check wheels
-        run: twine check dist/*
-
-      - name: Publish to GitHub Packages
-        env:
-          TWINE_USERNAME: Luca0101
-          TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN }}
-        run: twine upload --repository-url https://upload.pypi.pkg.github.com/${{ github.repository_owner }} dist/*
+      - name: Commit and push to gh-pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update wheels"
+          git push origin gh-pages
