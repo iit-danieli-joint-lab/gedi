@@ -8,35 +8,122 @@ import os
 try:
     from . import _ext as _ext
 except ImportError as e:
-    # By default, do NOT JIT compile when imported from an installed wheel.
-    # Allow opting in by setting GEDI_POINTNET2_JIT=1 for development.
-    if os.environ.get("GEDI_POINTNET2_JIT", "0") not in {"1", "true", "True"}:
-        raise ImportError(
-            "pointnet2_ops native extension '_ext' not found. "
-            "This wheel expects the prebuilt extension to be included (e.g., .pyd/.so). "
-            "Set GEDI_POINTNET2_JIT=1 to allow runtime JIT compilation for development."
-        ) from e
+    # Prebuilt extension missing → fall back to JIT compilation automatically.
+    warnings.warn(
+        "pointnet2_ops prebuilt extension not found; running JIT build. "
+        "This is only for development purpose and not intended to be used with prebuilt wheels."
+    )
 
-    from torch.utils.cpp_extension import load
+    # JIT compile the extension (as done in setup.py)
+    from torch.utils.cpp_extension import load, CppExtension, CUDAExtension
     import glob
     import os.path as osp
+    from pathlib import Path
 
-    _ext_src_root = osp.join(osp.dirname(__file__), "_ext-src")
-    _ext_sources = glob.glob(osp.join(_ext_src_root, "src", "*.cpp")) + glob.glob(
-        osp.join(_ext_src_root, "src", "*.cu")
-    )
-    # Optional: headers discovery, not required by load()
+    os.environ["TORCH_CUDA_ARCH_LIST"] = "6.0;6.1;7.5;8.6;8.9"
 
-    os.environ.setdefault("TORCH_CUDA_ARCH_LIST", "3.7+PTX;5.0;6.0;6.1;6.2;7.0;7.5")
+    this_dir = Path(__file__).parent.resolve()
+    _ext_src_root = osp.join(this_dir, "_ext-src")
+
+    # -----------------------------
+    # Collect Pixi dependencies
+    # -----------------------------
+    def collect_pixi_deps():
+        conda_prefix = os.environ.get("CONDA_PREFIX", None)
+        include_dirs, library_dirs, libraries = [], [], []
+
+        if conda_prefix:
+            if os.name == "nt":
+                include_dirs.append(os.path.join(conda_prefix, "Library", "include"))
+                library_dirs.append(os.path.join(conda_prefix, "Library", "lib"))
+            else:
+                include_dirs.append(os.path.join(conda_prefix, "include"))
+                library_dirs.append(os.path.join(conda_prefix, "lib"))
+
+            # Check for binary libraries in lib/
+            libdir = library_dirs[0] if library_dirs else None
+            if libdir and osp.isdir(libdir):
+                libfiles = os.listdir(libdir)
+
+                def has_lib(name):
+                    return any(name in f for f in libfiles)
+
+                if has_lib("tbb"):
+                    libraries.append("tbb")
+                if has_lib("fmt"):
+                    libraries.append("fmt")
+
+            # Eigen and nanoflann: header-only → only include_dirs
+            include_dirs.append(os.path.join(conda_prefix, "include", "eigen3"))
+            include_dirs.append(os.path.join(conda_prefix, "include")) 
+
+        return include_dirs, library_dirs, libraries
+
+    all_cpp = glob.glob(osp.join(_ext_src_root, "src", "*.cpp"))
+    all_cu = glob.glob(osp.join(_ext_src_root, "src", "*.cu"))
+    exclude_cpp = {"RadiusSearchOps.cpp", "RadiusSearchOpKernel.cpp"}
+    cpp_sources = [s for s in all_cpp if osp.basename(s) not in exclude_cpp]
+    cuda_sources = list(all_cu)
+
+    use_cuda = torch.cuda.is_available() and torch.utils.cpp_extension.CUDA_HOME is not None
+
+    # -----------------------------
+    # Pointnet2 extension
+    # -----------------------------
+    extra_compile_args={"cxx": ["-O3"], "nvcc": ["-O3", "-Xfatbin", "-compress-all"]}
+    extra_cflags = extra_compile_args.get("cxx", ["-O3"])
+    extra_cuda_cflags = extra_compile_args.get("nvcc", ["-O3", "-Xfatbin", "-compress-all"])
+    
+    define_macros = []
+    if use_cuda:
+        define_macros.append(("WITH_CUDA", None))
+
+    if define_macros:
+        cflags_macros = [f"-D{name}" if value is None else f"-D{name}={value}" for name, value in define_macros]
+        extra_cflags.extend(cflags_macros)
+        if use_cuda:
+            extra_cuda_cflags.extend(cflags_macros)
+
+    pixi_includes, pixi_libdirs, pixi_libs = collect_pixi_deps()
+    pointnet_includes = [osp.join(_ext_src_root, "include")]
+    o3d_includes = [osp.join(_ext_src_root, "include", "open3d")]
+
     _ext = load(
-        "_ext",
-        sources=_ext_sources,
-        extra_include_paths=[osp.join(_ext_src_root, "include")],
-        extra_cflags=["-O3"],
-        extra_cuda_cflags=["-O3", "-Xfatbin", "-compress-all"],
-        with_cuda=True,
+        name="gedi_pointnet2",
+        sources=cpp_sources + cuda_sources if use_cuda else cpp_sources,
+        extra_cflags=extra_cflags,
+        extra_cuda_cflags=extra_cuda_cflags,
+        extra_include_paths=pointnet_includes + pixi_includes,
+        with_cuda=use_cuda,
+        verbose=True
     )
 
+    # -----------------------------
+    # RadiusSearch extension
+    # -----------------------------
+    prefix = "/LIBPATH:" if os.name == "nt" else "-L"
+    extra_ldflags = [f"{prefix}{d}" for d in pixi_libdirs if d]
+
+    extra_ldflags_rs = list(extra_ldflags)
+
+    if os.name == "nt":
+        extra_compile_args_rs = {"cxx": ["/utf-8"]}
+        extra_ldflags_rs.extend(f"{lib}.lib" for lib in pixi_libs if lib)
+    else:
+        extra_compile_args_rs = {"cxx": ["-finput-charset=UTF-8", "-fexec-charset=UTF-8"]}
+        extra_ldflags_rs.extend(f"-l{lib}" for lib in pixi_libs if lib)
+
+    gedi_radius_search_op = load(
+        name="gedi_radius_search_op",
+        sources=[
+            osp.join(_ext_src_root, "src", "RadiusSearchOps.cpp"),
+            osp.join(_ext_src_root, "src", "RadiusSearchOpKernel.cpp"),
+        ],
+        extra_cflags=extra_compile_args_rs.get("cxx", []),
+        extra_include_paths=o3d_includes + pixi_includes,
+        extra_ldflags=extra_ldflags_rs,
+        verbose=True
+    )
 
 class FurthestPointSampling(Function):
     @staticmethod

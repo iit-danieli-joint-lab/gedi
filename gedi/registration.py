@@ -23,8 +23,9 @@ def compute_registration_matrix_from_path(
     max_correspondence_distance: float = 3,
     edge_length_checker: float = 0.9,
     distance_checker: float = 2.6,
-    ransac_iterations: int = 3000,
-    visualize: bool = True,
+    ransac_iterations: int = 4000000,
+    ransac_correspondences_threshold: int = 40,
+    visualize: bool = False,
     device: str = 'cuda'
 ) -> np.ndarray:
     pcd0 = o3d.io.read_point_cloud(pcd0_path)
@@ -43,22 +44,24 @@ def compute_registration_matrix_from_path(
     edge_length_checker,
     distance_checker,
     ransac_iterations,
+    ransac_correspondences_threshold,
     visualize,
     device) 
 
 def compute_registration_matrix(
     pcd0_points: np.ndarray,
     pcd1_points: np.ndarray,
-    samples_per_batch: int = 500,
-    samples_per_patch_lrf: int = 4000,
+    samples_per_batch: int = 100,
+    samples_per_patch_lrf: int = 800,
     samples_per_patch_out: int = 512,
-    lrf_radius: float = 0.5,
-    voxel_size: float = 0.01,
-    patches_per_pair: int = 5000,
-    max_correspondence_distance: float = 0.02,
+    lrf_radius: float = 30,
+    voxel_size: float = 3,
+    patches_per_pair: int = 1000,
+    max_correspondence_distance: float = 3,
     edge_length_checker: float = 0.9,
-    distance_checker: float = 0.02,
-    ransac_iterations: int = 1000,
+    distance_checker: float = 2.6,
+    ransac_iterations: int = 4000000,
+    ransac_correspondences_threshold: int = 40,
     visualize: bool = False,
     device: str = 'cuda'
 ) -> np.ndarray:
@@ -132,25 +135,37 @@ def compute_registration_matrix(
     _pcd0_o3d.points = o3d.utility.Vector3dVector(pts0)
     _pcd1_o3d = o3d.geometry.PointCloud()
     _pcd1_o3d.points = o3d.utility.Vector3dVector(pts1)
-
+    
+    correspondences = 0
+    attempsts_counter = 0
     # run RANSAC registration
-    est_result01 = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
-        _pcd0_o3d,
-        _pcd1_o3d,
-        pcd0_dsdv,
-        pcd1_dsdv,
-        mutual_filter=True,
-        max_correspondence_distance=max_correspondence_distance,
-        estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
-        ransac_n=3,
-        checkers=[
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(edge_length_checker),
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(distance_checker)
-        ],
-        criteria=o3d.pipelines.registration.RANSACConvergenceCriteria(50000, ransac_iterations)
-    )
-
-    print(f"Number of correspondences found by RANSAC: {len(est_result01.correspondence_set)}")
+    while correspondences < ransac_correspondences_threshold:
+        if attempsts_counter > 3:
+            ransac_correspondences_threshold = max(0, ransac_correspondences_threshold - 10)
+            print(f"Lowering ransac_correspondences_threshold to {ransac_correspondences_threshold}")
+        
+        est_result01 = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+            _pcd0_o3d,
+            _pcd1_o3d,
+            pcd0_dsdv,
+            pcd1_dsdv,
+            mutual_filter=False,
+            max_correspondence_distance=max_correspondence_distance,
+            estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
+            ransac_n=3,
+            checkers=[
+                o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(edge_length_checker),
+                o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(distance_checker)
+            ],
+            criteria=o3d.pipelines.registration.RANSACConvergenceCriteria(ransac_iterations, 0.999)
+        )
+        attempsts_counter += 1
+        correspondences = len(est_result01.correspondence_set)
+        if correspondences == 0:
+            print("No correspondences found, returning...")
+            break
+        else:
+            print(f"Number of correspondences found by RANSAC: {len(est_result01.correspondence_set)}")
 
     if visualize:
         pcd0.transform(est_result01.transformation)
@@ -176,7 +191,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_correspondence_distance", type=float, default=3)
     parser.add_argument("--edge_length_checker", type=float, default=0.9)
     parser.add_argument("--distance_checker", type=float, default=2.6)
-    parser.add_argument("--ransac_iterations", type=int, default=3000)
+    parser.add_argument("--ransac_iterations", type=int, default=4000000)
+    parser.add_argument("--ransac_correspondences_threshold", type=int, default=40)
     parser.add_argument("--visualize", action="store_true", help="Visualize the point clouds")
     parser.add_argument("--device", type=str, default="cuda", help="Device to use: 'cuda' or 'cpu'")
 
@@ -195,6 +211,7 @@ if __name__ == "__main__":
         edge_length_checker=args.edge_length_checker,
         distance_checker=args.distance_checker,
         ransac_iterations=args.ransac_iterations,
+        ransac_correspondences_threshold=args.ransac_correspondences_threshold,
         visualize=args.visualize,
         device=args.device
     )
