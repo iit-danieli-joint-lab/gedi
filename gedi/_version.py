@@ -16,5 +16,5 @@ def _compute_local_suffix() -> str:
         return "+cpu"
 
 # Compute version from BASE + cpu/cuda suffix
-_BASE = os.environ.get("GEDI_BASE_VERSION", "0.4.0")
+_BASE = os.environ.get("GEDI_BASE_VERSION", "0.4.1")
 __version__ = _BASE + _compute_local_suffix()

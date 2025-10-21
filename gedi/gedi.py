@@ -3,10 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchgeometry as tgm
 import numpy as np
-    
-from gedi.backbones.pointnet2_ops.pointnet2_modules import PointnetSAModule, PointnetSAModuleMSG
-from gedi.backbones.pointnet2_ops import gedi_radius_search_op
 
+try:
+    # Release: installed via pip
+    from gedi.backbones.pointnet2_ops.pointnet2_modules import PointnetSAModule, PointnetSAModuleMSG
+    from gedi.backbones.pointnet2_ops import gedi_radius_search_op
+except ImportError:
+    # Debug: run from source code
+    from backbones.pointnet2_ops.pointnet2_modules import PointnetSAModule, PointnetSAModuleMSG
+    from backbones.pointnet2_ops import gedi_radius_search_op
+    
 torch.backends.mkldnn.enabled = False
 
 class tnet(nn.Module):

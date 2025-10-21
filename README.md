@@ -46,7 +46,8 @@ def compute_registration_matrix(
     max_correspondence_distance: float = 0.02,
     edge_length_checker: float = 0.9,
     distance_checker: float = 0.02,
-    ransac_iterations: int = 1000,
+    ransac_iterations: int = 4000000,
+    ransac_correspondences_threshold: int = 40,
     visualize: bool = False,
     device: str = 'cuda'
 ) -> np.ndarray:
@@ -66,6 +67,7 @@ def compute_registration_matrix(
 - `edge_length_checker` is the edge length similarity threshold for the RANSAC correspondence checker;
 - `distance_checker` is the distance similarity threshold for the RANSAC correspondence checker;
 - `ransac_iterations` is the maximum number of RANSAC iterations;
+- `ransac_correspondences_threshold` is the minimum number of correspondences required to consider RANSAC successful. After 3 unsuccessful attempts this threshold is lowered by 10 each cycle until Ransac becomes successful;
 - `visualize` (bool) whether to visualize the clouds through Open3D visualizer;
 - `device` (str) whether to use **CPU** (`arg: 'cpu'`) or **GPU** (`arg: 'cuda'`) to run registration. **Note:** Inference on CPU takes roughly **6× more time** compared to GPU.
 

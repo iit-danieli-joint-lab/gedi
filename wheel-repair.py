@@ -68,8 +68,6 @@ try:
     torch_added = False
 
     for i, line in enumerate(lines):
-        if line.startswith("Requires-Dist: torch"):
-            continue
         new_lines.append(line)
 
         # Adds the torch URL immediately after the last existing Requires-Dist
