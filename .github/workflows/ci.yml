@@ -73,28 +73,28 @@ jobs:
 
       - name: Organize wheels and generate index
         run: |
-          mkdir -p gh-pages/simple/gedi/{cpu,cu118,cu121,cu124,cu126,cu128,cu129}
+          mkdir -p gh-pages/simple/idjl-gedi/{cpu,cu118,cu121,cu124,cu126,cu128,cu129}
           
           # Organize wheels into subfolders based on their tags
           for artifact_dir in downloaded-artifacts/*; do
             if [[ -d "$artifact_dir" ]]; then
               for whl in "$artifact_dir"/*.whl; do
                 if [[ "$whl" == *"+cpu"* ]]; then
-                  cp "$whl" gh-pages/simple/gedi/cpu/
+                  cp "$whl" gh-pages/simple/idjl-gedi/cpu/
                 elif [[ "$whl" == *"+cu118"* ]]; then
-                  cp "$whl" gh-pages/simple/gedi/cu118/
+                  cp "$whl" gh-pages/simple/idjl-gedi/cu118/
                 elif [[ "$whl" == *"+cu121"* ]]; then
-                  cp "$whl" gh-pages/simple/gedi/cu121/
+                  cp "$whl" gh-pages/simple/idjl-gedi/cu121/
                 elif [[ "$whl" == *"+cu124"* ]]; then
-                  cp "$whl" gh-pages/simple/gedi/cu124/
+                  cp "$whl" gh-pages/simple/idjl-gedi/cu124/
                 elif [[ "$whl" == *"+cu126"* ]]; then
-                  cp "$whl" gh-pages/simple/gedi/cu126/
+                  cp "$whl" gh-pages/simple/idjl-gedi/cu126/
                 elif [[ "$whl" == *"+cu128"* ]]; then
-                  cp "$whl" gh-pages/simple/gedi/cu128/
+                  cp "$whl" gh-pages/simple/idjl-gedi/cu128/
                 elif [[ "$whl" == *"+cu129"* ]]; then
-                  cp "$whl" gh-pages/simple/gedi/cu129/
+                  cp "$whl" gh-pages/simple/idjl-gedi/cu129/
                 else
-                  cp "$whl" gh-pages/simple/gedi/cpu/  # Fallback
+                  cp "$whl" gh-pages/simple/idjl-gedi/cpu/  # Fallback
                 fi
               done
             fi
@@ -116,7 +116,7 @@ jobs:
                       f.write(f'<a href=\"{file}\">{file}</a><br>\\n')
                   f.write('</body></html>\\n')
           
-          base_path = 'gh-pages/simple/gedi'
+          base_path = 'gh-pages/simple/idjl-gedi'
           for sub in ['cpu', 'cu118', 'cu121', 'cu124', 'cu126', 'cu128', 'cu129']:
               if os.path.exists(os.path.join(base_path, sub)):
                   gen_index(os.path.join(base_path, sub))
